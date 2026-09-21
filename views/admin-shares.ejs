@@ -1,0 +1,63 @@
+<%- include('partials/header') %>
+<div class="admin-layout"><%- include('partials/admin-nav') %>
+  <main class="admin-main">
+    <div class="admin-page-head">
+      <div>
+        <span class="page-kicker">SHARING CONTROL</span>
+        <h1>Secure Shares</h1>
+        <p>Only secure-sharing data is shown here: file, owner, protection, access limits, expiry and status.</p>
+      </div>
+      <span class="admin-user-pill">👤 <%= adminEmail %></span>
+    </div>
+
+    <section class="admin-section admin-full-section">
+      <div class="admin-section-head">
+        <div><span class="panel-kicker">SHARE LINKS</span><h2>Active & Previous Shares</h2></div>
+        <span class="admin-pill"><%= shares.length %> links</span>
+      </div>
+      <div class="table-responsive admin-table-wrap">
+        <table class="table admin-table">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Owner</th>
+              <th>Protection</th>
+              <th>Access</th>
+              <th>Expiry</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!shares.length) { %>
+              <tr><td colspan="8" class="text-center">No secure shares found.</td></tr>
+            <% } %>
+            <% shares.forEach(s => {
+              const expired = s.expires_at && new Date(s.expires_at) <= new Date();
+            %>
+              <tr>
+                <td><strong class="admin-file-name"><%= s.file_name %></strong></td>
+                <td><%= s.email %></td>
+                <td><%= s.password_protected ? '🔐 Password' : '🔓 No password' %></td>
+                <td><%= s.download_count %><%= s.max_downloads === null ? ' / Unlimited' : ' / ' + s.max_downloads %><br><small><%= s.allow_download ? 'Download allowed' : 'View only' %></small></td>
+                <td><%= s.expires_at ? new Date(s.expires_at).toLocaleString() : 'No expiry' %></td>
+                <td><span class="status-chip <%= s.revoked ? 'status-off' : (expired ? 'status-warn' : 'status-on') %>"><%= s.revoked ? 'Revoked' : (expired ? 'Expired' : 'Active') %></span></td>
+                <td><%= new Date(s.created_at).toLocaleString() %></td>
+                <td>
+                  <% if (!s.revoked) { %>
+                    <a class="btn btn-sm btn-outline-primary" href="/share/<%= s.token %>" target="_blank">Open</a>
+                    <form class="d-inline" method="POST" action="/admin/share/revoke/<%= s.id %>" onsubmit="return confirm('Revoke this share link?')">
+                      <button class="btn btn-sm btn-outline-danger">Revoke</button>
+                    </form>
+                  <% } else { %>—<% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+<%- include('partials/footer') %>

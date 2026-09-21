@@ -1,0 +1,33 @@
+<%- include('partials/header') %>
+<main class="admin-login-page">
+  <div class="container">
+    <div class="admin-login-shell">
+      <div class="admin-login-brand">
+        <div class="admin-shield">🛡️</div>
+        <span class="page-kicker">SECURE VAULT CONTROL CENTER</span>
+        <h1>Administrator Login</h1>
+        <p>Authorized access for monitoring the Secure Vault platform, users, files and security activity.</p>
+      </div>
+
+      <% if (error) { %>
+        <div class="alert alert-danger admin-alert"><%= error %></div>
+      <% } %>
+
+      <form method="POST" action="/admin/login" class="admin-login-form">
+        <label>Administrator Email</label>
+        <input class="form-control" type="email" name="email" value="<%= adminEmail || '' %>" placeholder="Enter admin email" required autocomplete="username">
+
+        <label>Password</label>
+        <input class="form-control" type="password" name="password" placeholder="Enter admin password" required autocomplete="current-password">
+
+        <button class="btn btn-primary btn-lg w-100" type="submit">SIGN IN TO ADMIN PORTAL</button>
+      </form>
+
+      <div class="admin-login-footer">
+        <span>🔒 Restricted administrator access</span>
+        <a href="/">Back to Secure Vault</a>
+      </div>
+    </div>
+  </div>
+</main>
+<%- include('partials/footer') %>

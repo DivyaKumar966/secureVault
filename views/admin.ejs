@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+<main class="admin-page">
+  <div class="container py-5">
+    <div class="admin-topbar">
+      <div>
+        <span class="page-kicker">SECURE VAULT CONTROL CENTER</span>
+        <h1 class="admin-title">Admin Dashboard</h1>
+        <p>Platform overview, user activity, storage and secure-share monitoring.</p>
+      </div>
+      <div class="admin-actions">
+        <span class="admin-user">👤 <%= adminEmail %></span>
+        <a href="/admin/logout" class="btn btn-outline-dark">Admin Logout</a>
+      </div>
+    </div>
+
+    <div class="admin-stat-grid">
+      <div class="admin-stat"><span>👥 Total Users</span><strong><%= stats.users %></strong><small>Registered accounts</small></div>
+      <div class="admin-stat"><span>📁 Stored Files</span><strong><%= stats.files %></strong><small>Across all users</small></div>
+      <div class="admin-stat"><span>☁️ Storage Used</span><strong><%= (Number(stats.storage_bytes || 0) / 1024 / 1024).toFixed(1) %> MB</strong><small>Total file size</small></div>
+      <div class="admin-stat"><span>🔗 Active Shares</span><strong><%= stats.active_shares %></strong><small>Currently accessible</small></div>
+    </div>
+
+    <section class="admin-section">
+      <div class="admin-section-head"><div><span class="panel-kicker">ACCOUNT OVERVIEW</span><h2>Recent Users</h2></div><span class="admin-pill">Last 12</span></div>
+      <div class="table-responsive admin-table-wrap"><table class="table admin-table"><thead><tr><th>User</th><th>Joined</th><th>Files</th></tr></thead><tbody>
+        <% if (!users.length) { %><tr><td colspan="3" class="text-center">No users found.</td></tr><% } %>
+        <% users.forEach(user => { %><tr><td><strong><%= user.email %></strong></td><td><%= new Date(user.created_at).toLocaleString() %></td><td><span class="admin-count"><%= user.file_count %></span></td></tr><% }) %>
+      </tbody></table></div>
+    </section>
+
+    <section class="admin-section">
+      <div class="admin-section-head"><div><span class="panel-kicker">STORAGE MONITOR</span><h2>Recent Files</h2></div><span class="admin-pill">Last 12</span></div>
+      <div class="table-responsive admin-table-wrap"><table class="table admin-table"><thead><tr><th>File</th><th>Owner</th><th>Type</th><th>Size</th><th>Uploaded</th></tr></thead><tbody>
+        <% if (!recentFiles.length) { %><tr><td colspan="5" class="text-center">No files found.</td></tr><% } %>
+        <% recentFiles.forEach(file => { %><tr><td><strong class="admin-file-name"><%= file.file_name %></strong></td><td><%= file.email %></td><td><span class="admin-type"><%= file.file_type %></span></td><td><%= (Number(file.file_size || 0) / 1024 / 1024).toFixed(2) %> MB</td><td><%= new Date(file.uploaded_at).toLocaleString() %></td></tr><% }) %>
+      </tbody></table></div>
+    </section>
+
+    <section class="admin-section">
+      <div class="admin-section-head"><div><span class="panel-kicker">SHARING CONTROL</span><h2>Secure Shares</h2></div><span class="admin-pill">Monitor & revoke</span></div>
+      <div class="table-responsive admin-table-wrap"><table class="table admin-table"><thead><tr><th>File</th><th>Owner</th><th>Status</th><th>Downloads</th><th>Expiry</th><th>Action</th></tr></thead><tbody>
+        <% if (!shares.length) { %><tr><td colspan="6" class="text-center">No secure shares found.</td></tr><% } %>
+        <% shares.forEach(share => { const expired = share.expires_at && new Date(share.expires_at) <= new Date(); %><tr><td><strong class="admin-file-name"><%= share.file_name %></strong></td><td><%= share.email %></td><td><span class="status-chip <%= share.revoked ? 'status-off' : (expired ? 'status-warn' : 'status-on') %>"><%= share.revoked ? 'Revoked' : (expired ? 'Expired' : 'Active') %></span></td><td><%= share.download_count %><%= share.max_downloads === null ? '' : ' / ' + share.max_downloads %></td><td><%= share.expires_at ? new Date(share.expires_at).toLocaleString() : 'No expiry' %></td><td><% if (!share.revoked) { %><form method="POST" action="/admin/share/revoke/<%= share.id %>" onsubmit="return confirm('Revoke this share link?')"><button class="btn btn-sm btn-outline-danger">Revoke</button></form><% } else { %><span class="text-muted">—</span><% } %></td></tr><% }) %>
+      </tbody></table></div>
+    </section>
+
+    <section class="admin-section">
+      <div class="admin-section-head"><div><span class="panel-kicker">SECURITY MONITOR</span><h2>Recent Audit Activity</h2></div><span class="admin-pill">Last 15 events</span></div>
+      <div class="table-responsive admin-table-wrap"><table class="table admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th><th>IP</th></tr></thead><tbody>
+        <% if (!audit.length) { %><tr><td colspan="5" class="text-center">No audit activity yet.</td></tr><% } %>
+        <% audit.forEach(log => { %><tr><td><%= new Date(log.created_at).toLocaleString() %></td><td><%= log.email %></td><td><span class="admin-action-badge"><%= log.action %></span></td><td><%= log.details || '—' %></td><td><%= log.ip_address || '—' %></td></tr><% }) %>
+      </tbody></table></div>
+    </section>
+  </div>
+</main>
+<%- include('partials/footer') %>

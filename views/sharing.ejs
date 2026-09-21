@@ -1,0 +1,147 @@
+<%- include('partials/header') %>
+
+<div class="page-shell">
+  <div class="container py-5">
+    <div class="page-hero">
+      <span class="page-kicker">SECURE TRANSFER</span>
+      <h1>🔗 Secure File Sharing</h1>
+      <p>Share one vault file with password protection, expiry and access limits.</p>
+    </div>
+
+    <% if (created && shareUrl) { %>
+      <div class="share-created-card">
+        <div class="share-created-icon">✓</div>
+        <div class="share-created-content">
+          <div class="share-created-title">Secure link created successfully</div>
+          <p>Copy this link and send it to the person you trust.</p>
+          <div class="share-link-row">
+            <input id="shareUrlInput" class="form-control" value="<%= shareUrl %>" readonly>
+            <button type="button" id="copyShareBtn" class="btn btn-primary">Copy Link</button>
+          </div>
+          <small id="copyStatus" class="copy-status">Anyone with this link can access only the shared file and its configured permissions.</small>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="feature-panel mb-5">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-kicker">CREATE</span>
+          <h3>New Secure Share</h3>
+        </div>
+        <span class="security-pill">🔒 Controlled access</span>
+      </div>
+
+      <form action="/share/create" method="POST" class="share-form">
+        <div class="form-field field-wide">
+          <label class="form-label">Select Vault file</label>
+          <select name="mediaId" class="form-control" required>
+            <option value="">Choose a file</option>
+            <% files.forEach(f => { %>
+              <option value="<%= f.id %>" <%= String(selectedFileId || '') === String(f.id) ? 'selected' : '' %>><%= f.file_name %> · <%= f.file_type %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-field field-wide">
+          <label class="form-label">Share password <span>(optional)</span></label>
+          <input type="password" name="password" class="form-control" placeholder="Add an extra layer of protection">
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Link expiry</label>
+          <select name="expiry" class="form-control">
+            <option value="none">No expiry</option>
+            <option value="1h">1 hour</option>
+            <option value="24h">24 hours</option>
+            <option value="7d">7 days</option>
+            <option value="30d">30 days</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Access limit <span>(optional)</span></label>
+          <input type="number" min="1" name="maxDownloads" class="form-control" placeholder="Unlimited downloads">
+        </div>
+
+        <div class="form-field share-checkbox">
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" name="allowDownload" value="true" checked>
+            <span class="form-check-label"><strong>Allow download</strong><small>Recipient can download the shared file.</small></span>
+          </label>
+        </div>
+
+        <div class="share-submit-row">
+          <button class="btn btn-primary btn-lg">🔗 Create Secure Link</button>
+          <span>Password • Expiry • Access limit • Download control • Revocation</span>
+        </div>
+      </form>
+    </div>
+
+    <div class="section-heading compact">
+      <span>CONTROL CENTER</span>
+      <h2>Your shared links</h2>
+      <p>Review, open or revoke links you've created.</p>
+    </div>
+
+    <div class="feature-panel share-table-panel">
+      <div class="table-responsive">
+        <table class="table table-hover vault-table align-middle">
+          <thead>
+            <tr><th>File</th><th>Created</th><th>Expiry</th><th>Downloads</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <% if (shares.length) { %>
+              <% shares.forEach(s => { %>
+                <tr>
+                  <td><strong class="file-name-cell"><%= s.file_name %></strong></td>
+                  <td><%= new Date(s.created_at).toLocaleString() %></td>
+                  <td><%= s.expires_at ? new Date(s.expires_at).toLocaleString() : 'Never' %></td>
+                  <td><%= s.download_count %><%= s.max_downloads ? ' / ' + s.max_downloads : '' %></td>
+                  <td>
+                    <span class="status-badge <%= s.revoked ? 'status-revoked' : 'status-active' %>">
+                      <%= s.revoked ? 'Revoked' : 'Active' %>
+                    </span>
+                  </td>
+                  <td class="share-actions">
+                    <% if (!s.revoked) { %>
+                      <a class="btn btn-sm btn-outline-primary" href="/share/<%= s.token %>" target="_blank">Open</a>
+                      <form class="d-inline" action="/share/revoke/<%= s.id %>" method="POST">
+                        <button class="btn btn-sm btn-outline-danger">Revoke</button>
+                      </form>
+                    <% } else { %>—<% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="6" class="empty-table">No secure links created yet. Create your first controlled share above.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const copyBtn = document.getElementById("copyShareBtn");
+  const shareInput = document.getElementById("shareUrlInput");
+  const copyStatus = document.getElementById("copyStatus");
+
+  if (copyBtn && shareInput) {
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(shareInput.value);
+        copyBtn.textContent = "Copied ✓";
+        if (copyStatus) copyStatus.textContent = "Link copied successfully.";
+        setTimeout(() => copyBtn.textContent = "Copy Link", 1800);
+      } catch {
+        shareInput.select();
+        document.execCommand("copy");
+        copyBtn.textContent = "Copied ✓";
+      }
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>

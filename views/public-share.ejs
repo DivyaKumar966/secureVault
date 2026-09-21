@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure Vault · Shared File</title>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="public-share-body">
+  <main class="public-share-page">
+    <div class="public-share-brand">
+      <img src="/images/logo.png" alt="Secure Vault Logo">
+      <div>
+        <strong>SECURE VAULT</strong>
+        <span>Protected file sharing</span>
+      </div>
+    </div>
+
+    <div class="share-public-card">
+      <% if (!share) { %>
+        <div class="share-state-icon error">!</div>
+        <h1>Share Link Unavailable</h1>
+        <p class="share-message"><%= error || "This link is no longer available." %></p>
+      <% } else if (expired) { %>
+        <div class="share-state-icon error">!</div>
+        <span class="page-kicker">ACCESS BLOCKED</span>
+        <h1>Share Link Unavailable</h1>
+        <p class="share-message"><%= error || "This link has expired or been revoked." %></p>
+      <% } else { %>
+        <div class="share-file-header">
+          <div class="share-file-icon">
+            <% if (share.file_type === "image") { %>🖼️
+            <% } else if (share.file_type === "video") { %>🎥
+            <% } else if (share.file_type === "document") { %>📄
+            <% } else { %>📝<% } %>
+          </div>
+          <div>
+            <span class="page-kicker">SECURE SHARE</span>
+            <h1><%= share.file_name %></h1>
+            <p><%= share.file_type.toUpperCase() %> · <%= (share.file_size / 1024).toFixed(2) %> KB</p>
+          </div>
+        </div>
+
+        <% if (error) { %>
+          <div class="alert alert-danger share-alert"><%= error %></div>
+        <% } %>
+
+        <% if (needsPassword) { %>
+          <div class="password-gate">
+            <div class="password-gate-icon">🔐</div>
+            <h3>Password protected</h3>
+            <p>Enter the password provided by the file owner.</p>
+            <form action="/share/<%= share.token %>/access" method="POST">
+              <input type="password" name="password" class="form-control form-control-lg" placeholder="Share password" required autofocus>
+              <button class="btn btn-primary btn-lg btn-block mt-3">Unlock Secure Share</button>
+            </form>
+          </div>
+        <% } else { %>
+          <% if (limitReached) { %>
+            <div class="alert alert-warning share-alert">
+              ⚠️ The download limit has been reached. The file can no longer be downloaded from this link.
+            </div>
+          <% } %>
+          <div class="share-preview">
+            <% if (authorized && share.file_type === "image") { %>
+              <img src="/share/<%= share.token %>/file" alt="<%= share.file_name %>" class="shared-image-preview">
+            <% } else if (authorized && share.file_type === "video") { %>
+              <video class="shared-video-preview" controls playsinline>
+                <source src="/share/<%= share.token %>/file">
+                Your browser does not support video playback.
+              </video>
+            <% } else if (authorized && share.file_type === "document" && share.file_name.toLowerCase().endsWith(".pdf")) { %>
+              <iframe src="/share/<%= share.token %>/file" class="shared-pdf-preview" title="PDF preview"></iframe>
+            <% } else { %>
+              <div class="generic-file-preview">
+                <div class="generic-file-icon">
+                  <% if (share.file_type === "document") { %>📄<% } else { %>📝<% } %>
+                </div>
+                <strong><%= share.file_name %></strong>
+                <span>Ready to access securely</span>
+              </div>
+            <% } %>
+          </div>
+
+          <div class="share-action-row">
+            <% if (authorized && share.allow_download && !limitReached) { %>
+              <a href="/share/<%= share.token %>/download" class="btn btn-primary btn-lg">⬇ Download File</a>
+            <% } %>
+            <% if (!share.allow_download) { %>
+              <span class="no-download-badge">View only · Downloads disabled</span>
+            <% } %>
+          </div>
+
+          <div class="share-meta-row">
+            <span>🔒 Controlled by Secure Vault</span>
+            <% if (share.expires_at) { %><span>⏳ Expires <%= new Date(share.expires_at).toLocaleString() %></span><% } %>
+            <% if (share.max_downloads) { %><span>⬇ <%= share.download_count %>/<%= share.max_downloads %> downloads</span><% } %>
+          </div>
+        <% } %>
+
+        <p class="share-footer-note">This page provides access only to the file selected by the owner. Other Vault files remain private.</p>
+      <% } %>
+    </div>
+  </main>
+<script>
+(function(){const key="secureVaultTheme";const apply=t=>{document.documentElement.setAttribute("data-theme",t);const i=document.getElementById("themeIcon"),l=document.getElementById("themeLabel");if(i)i.textContent=t==="dark"?"☀":"☾";if(l)l.textContent=t==="dark"?"Light":"Dark"};apply(localStorage.getItem(key)||"light");const b=document.getElementById("themeToggle");if(b)b.addEventListener("click",()=>{const n=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";localStorage.setItem(key,n);apply(n)})})();
+</script>
+</body>
+</html>
