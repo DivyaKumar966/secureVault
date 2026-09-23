@@ -939,3 +939,16 @@ html[data-theme="light"] .security-stat { box-shadow: 0 12px 30px rgba(31,55,88,
 @media (max-width: 700px) {
   .back-arrow-btn { width: 38px; height: 38px; }
 }
+
+/* Secure Share button - Dark Mode */
+html[data-theme="dark"] .file-card .btn-outline-dark {
+    color: black !important;
+    border-color: #8b9bb5 !important;
+    opacity: 1 !important;
+}
+
+html[data-theme="dark"] .file-card .btn-outline-dark:hover {
+    color: #ffffff !important;
+    background-color: #4169e1 !important;
+    border-color: #4169e1 !important;
+}
