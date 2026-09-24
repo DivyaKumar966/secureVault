@@ -403,6 +403,31 @@ app.get("/admin/shares", requireAdmin, async (req, res) => {
     }
 });
 
+app.post("/admin/share/revoke/:id", requireAdmin, async (req, res) => {
+    try {
+        const result = await db.query(
+            `UPDATE secure_shares
+             SET revoked = TRUE
+             WHERE id = $1
+             RETURNING *`,
+            [req.params.id]
+        );
+
+        if (result.rows.length) {
+            await recordAdminAudit(
+                req,
+                "ADMIN_REVOKE_SHARE",
+                `Secure share #${req.params.id} revoked`
+            );
+        }
+
+        res.redirect("/admin/shares");
+    } catch (err) {
+        console.log("Admin revoke share error:", err.message);
+        res.status(500).send("Unable to revoke secure share.");
+    }
+});
+
 app.get("/admin/audit", requireAdmin, (req, res) => res.redirect("/admin/shares"));
 app.get("/admin/settings", requireAdmin, (req, res) => res.redirect("/admin/shares"));
 app.get("/admin/logout", async (req, res) => {
